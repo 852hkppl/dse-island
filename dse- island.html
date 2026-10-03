@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DSE 冒險島：學習與溫習一體化工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans TC', sans-serif; }
+        .island-glow { filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.5)); }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- 頂部導覽列 -->
+    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-lg">
+        <div class="flex items-center space-x-3">
+            <span class="text-3xl">🏝️</span>
+            <div>
+                <h1 class="text-xl font-black bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent">DSE 冒險島</h1>
+                <p class="text-xs text-slate-400">中學文憑試 學習與溫習一體化樂園</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <div class="bg-slate-700/60 px-3 py-1.5 rounded-full text-xs flex items-center space-x-2 border border-slate-600">
+                <span>⏱️ 總溫習時間: <strong id="totalStudyTime" class="text-teal-400">0</strong> 分鐘</span>
+            </div>
+            <div class="bg-slate-700/60 px-3 py-1.5 rounded-full text-xs flex items-center space-x-2 border border-slate-600">
+                <span>🏆 答對題數: <strong id="totalCorrect" class="text-yellow-400">0</strong>題</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主畫面容器 -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 左側與中間：島嶼地圖與主互動區 (佔 2 欄) -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- 島嶼地圖選單 -->
+            <section class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold flex items-center space-x-2">
+                        <span>🗺️</span><span>DSE 科目冒險島地圖</span>
+                    </h2>
+                    <span class="text-xs text-slate-400">透過溫習時間解鎖新島嶼！</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4" id="islandContainer">
+                    <!-- 動態生成島嶼 -->
+                </div>
+            </section>
+
+            <!-- 溫習與挑戰主控台 (預設未選時) -->
+            <section id="studyDashboard" class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 shadow-xl min-h-[350px] flex flex-col justify-center items-center text-center">
+                <div class="text-5xl mb-4">🧭</div>
+                <h3 class="text-xl font-bold text-slate-200 mb-2">準備好展開 DSE 冒險了嗎？</h3>
+                <p class="text-slate-400 text-sm max-w-md mb-6">請點選上方任一個已解鎖的科目島嶼，即可開始進行「考點精華溫習」以及「DSE 實戰選擇題挑戰」！</p>
+            </section>
+        </div>
+
+        <!-- 右側：考生即時互動聊天室 (佔 1 欄) -->
+        <aside class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 shadow-xl flex flex-col h-[600px]">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-4">
+                <h2 class="font-bold flex items-center space-x-2 text-sm">
+                    <span>💬</span><span>DSE 考生交流聊天室</span>
+                </h2>
+                <span class="flex items-center text-xs text-emerald-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span>
+                    4人線上
+                </span>
+            </div>
+
+            <!-- 訊息捲動區 -->
+            <div id="chatMessages" class="flex-1 overflow-y-auto space-y-3 pr-2 text-xs">
+                <div class="bg-slate-700/40 p-2.5 rounded-xl border border-slate-700">
+                    <div class="flex justify-between text-slate-400 mb-1">
+                        <span class="font-semibold text-blue-400">S.3 Alex</span>
+                        <span>12:00</span>
+                    </div>
+                    <p class="text-slate-200">大家地理溫到邊度？地殼板塊果邊好難記...</p>
+                </div>
+                <div class="bg-slate-700/40 p-2.5 rounded-xl border border-slate-700">
+                    <div class="flex justify-between text-slate-400 mb-1">
+                        <span class="font-semibold text-purple-400">Kelvin (S.3)</span>
+                        <span>12:01</span>
+                    </div>
+                    <p class="text-slate-200">我正在溫化學離子鍵！Mgo果個真係成日錯。</p>
+                </div>
+            </div>
+
+            <!-- 發言輸入框 -->
+            <div class="mt-4 pt-3 border-t border-slate-700 flex gap-2">
+                <input type="text" id="chatInput" placeholder="和戰友們聊聊溫習進度..." 
+                    class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+                <button onclick="sendChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">發送</button>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- JavaScript 遊戲邏輯 -->
+    <script>
+        // 資料結構：島嶼與題庫
+        const islands = [
+            { id: 'geo', name: '地理島 (Global Shifts)', icon: '🌍', unlocked: true, minTime: 0, color: 'from-blue-600 to-cyan-600',
+              notes: '重點速遞：全球製造業轉移、中國工業發展、能源資源分佈與核能/可再生能源。',
+              questions: [
+                  { q: '以下哪一項是全球製造業由先進國家轉移向發展中國家的主要原因？', options: ['勞工成本較低', '氣候較溫和', '當地法律不允許', '不需要廠房'], answer: 0 },
+                  { q: '核能發電主要利用以下哪種化學元素的核分裂反應？', options: ['碳', '鈾', '鐵', '氫'], answer: 1 }
+              ]
+            },
+            { id: 'chem', name: '化學島 (Ionic Bonding)', icon: '⚗️', unlocked: false, minTime: 5, color: 'from-purple-600 to-indigo-600',
+              notes: '重點速遞：離子鍵是由金屬與非金屬原子之間轉移電子形成。鎂與氧形成的化合物化學式為 MgO。',
+              questions: [
+                  { q: '鎂(Mg)與氧(O)化合時，形成的離子化合物化學式是什麼？', options: ['MgO', 'Mg2O', 'MgO2', 'Mg3O2'], answer: 0 },
+                  { q: '離子化合物在固態時通常不能導電，原因是什麼？', options: ['沒有離子存在', '離子被固定在晶格中無法自由移動', '電子會被吸乾', '溫度太低'], answer: 1 }
+              ]
+            },
+            { id: 'phy', name: '物理島 (Optics & Waves)', icon: '🔭', unlocked: false, minTime: 10, color: 'from-amber-600 to-orange-600',
+              notes: '重點速遞：凹透鏡（Concave Lens）會使光線發散，所成的像通常是虛像、正立且縮小。',
+              questions: [
+                  { q: '凹透鏡對光線具有什麼作用？', options: ['會聚光線', '發散光線', '反射光線', '吸收光線'], answer: 1 },
+                  { q: '光從空氣斜射入水中時，折射光線會怎樣？', options: ['偏離法線', '靠近法線', '原路折回', '直接消失'], answer: 1 }
+              ]
+            },
+            { id: 'bio', name: '生物島 (Enzymes & Life)', icon: '🧬', unlocked: false, minTime: 15, color: 'from-emerald-600 to-teal-600',
+              notes: '重點速遞：酵素（Enzymes）是生物催化劑，其活性受溫度與pH值影響。高溫會使酵素變性。',
+              questions: [
+                  { q: '為什麼過高的溫度會降低多數人類體內酵素的活性？', options: ['酵素被冷凍', '酵素結構受熱變性（Denaturation）', 'substrate數量不足', 'pH值變高'], answer: 1 },
+                  { q: '酵素在化學反應中的主要角色是什麼？', options: ['作為反應物消耗', '降低活化能以加快反應速率', '提供能量', '改變平衡點'], answer: 1 }
+              ]
+            },
+            { id: 'chi', name: '中文島 (文學與閱讀)', icon: '📖', unlocked: false, minTime: 20, color: 'from-rose-600 to-pink-600',
+              notes: '重點速遞：張愛玲小說《傾城之戀》以亂世（香港陷落）成就了一段凡人的愛情。',
+              questions: [
+                  { q: '張愛玲的短篇小說《傾城之戀》中，男女主角經歷了哪場歷史事件？', options: ['抗日戰爭香港陷落', '辛亥革命', '五四運動', '香港回歸'], answer: 0 },
+                  { q: '《傾城之戀》男女主角的名字分別是？', options: ['張愛玲與胡蘭成', '范柳原與白流蘇', '許鞍華與周潤發', '賈寶玉與林黛玉'], answer: 1 }
+              ]
+            }
+        ];
+
+        let totalStudyTime = 0; // 分鐘
+        let totalCorrect = 0;
+        let currentActiveIsland = null;
+
+        // 初始化畫面
+        function renderIslands() {
+            const container = document.getElementById('islandContainer');
+            container.innerHTML = '';
+
+            islands.forEach(island => {
+                const isUnlocked = totalStudyTime >= island.minTime;
+                island.unlocked = isUnlocked;
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-xl border transition-all duration-300 flex flex-col justify-between ${
+                    isUnlocked 
+                    ? 'bg-slate-700/60 border-slate-600 hover:border-blue-500 cursor-pointer shadow-md hover:scale-[1.02]' 
+                    : 'bg-slate-900/60 border-slate-800 opacity-60 cursor-not-allowed'
+                }`;
+                
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-3xl">${island.icon}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full ${isUnlocked ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400'}">
+                                ${isUnlocked ? '已解鎖' : `需溫習 ${island.minTime} 分鐘`}
+                            </span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-100">${island.name}</h4>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
+                        <span>點擊進入島嶼</span>
+                        <span>${isUnlocked ? '👉' : '🔒'}</span>
+                    </div>
+                `;
+
+                if (isUnlocked) {
+                    card.onclick = () => enterIsland(island.id);
+                }
+                container.appendChild(card);
+            });
+        }
+
+        // 進入特定島嶼
+        function enterIsland(islandId) {
+            const island = islands.find(i => i.id === islandId);
+            if (!island) return;
+            currentActiveIsland = island;
+
+            // 每進入島嶼自動增加 5 分鐘溫習時間作為獎勵與記錄
+            totalStudyTime += 5;
+            document.getElementById('totalStudyTime').innerText = totalStudyTime;
+            renderIslands(); // 檢查解鎖狀態
+
+            const dashboard = document.getElementById('studyDashboard');
+            dashboard.className = "bg-slate-800/90 backdrop-blur border border-blue-500/50 rounded-2xl p-6 shadow-2xl text-left";
+            
+            dashboard.innerHTML = `
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-3xl">${island.icon}</span>
+                        <div>
+                            <h3 class="text-lg font-bold text-blue-400">${island.name}</h3>
+                            <p class="text-xs text-slate-400">學習與溫習一體化挑戰模式</p>
+                        </div>
+                    </div>
+                    <button onclick="resetDashboard()" class="text-xs bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-slate-300">返回地圖</button>
+                </div>
+
+                <!-- 溫習卡片 -->
+                <div class="bg-blue-950/40 border border-blue-800/60 p-4 rounded-xl mb-6">
+                    <h4 class="text-xs font-bold text-blue-300 uppercase tracking-wider mb-1">💡 考點精華速遞</h4>
+                    <p class="text-xs text-slate-200 leading-relaxed">${island.notes}</p>
+                </div>
+
+                <!-- 測驗區域 -->
+                <div>
+                    <h4 class="text-sm font-bold text-slate-200 mb-3">📝 DSE 實戰選擇題挑戰</h4>
+                    <div id="quizContainer" class="space-y-4">
+                        <!-- 題目會動態載入 -->
+                    </div>
+                </div>
+            `;
+
+            renderQuiz(island);
+        }
+
+        // 渲染測驗題目
+        function renderQuiz(island) {
+            const container = document.getElementById('quizContainer');
+            container.innerHTML = '';
+
+            island.questions.forEach((qObj, qIndex) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'bg-slate-900/60 border border-slate-700/80 p-4 rounded-xl';
+                
+                let optionsHtml = '';
+                qObj.options.forEach((opt, oIndex) => {
+                    optionsHtml += `
+                        <label class="flex items-center space-x-3 text-xs text-slate-300 p-2 rounded-lg hover:bg-slate-800 cursor-pointer transition">
+                            <input type="radio" name="q_${qIndex}" value="${oIndex}" class="text-blue-500 focus:ring-blue-400">
+                            <span>${opt}</span>
+                        </label>
+                    `;
+                });
+
+                qDiv.innerHTML = `
+                    <p class="text-xs font-bold text-slate-100 mb-2">Q${qIndex + 1}. ${qObj.q}</p>
+                    <div class="space-y-1" id="options_${qIndex}">
+                        ${optionsHtml}
+                    </div>
+                    <div id="feedback_${qIndex}" class="mt-2 text-xs font-semibold hidden"></div>
+                `;
+                container.appendChild(qDiv);
+            });
+
+            // 提交按鈕
+            const submitBtn = document.createElement('button');
+            submitBtn.className = 'w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-500 hover:to-teal-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg mt-2';
+            submitBtn.innerText = '提交答案，獲取解鎖積分！';
+            submitBtn.onclick = () => evaluateQuiz(island);
+            container.appendChild(submitBtn);
+        }
+
+        // 評分與批改
+        function evaluateQuiz(island) {
+            let correctCount = 0;
+            island.questions.forEach((qObj, qIndex) => {
+                const radios = document.getElementsByName(`q_${qIndex}`);
+                let selected = -1;
+                for (let r of radios) {
+                    if (r.checked) {
+                        selected = parseInt(r.value);
+                        break;
+                    }
+                }
+
+                const feedback = document.getElementById(`feedback_${qIndex}`);
+                feedback.classList.remove('hidden');
+
+                if (selected === qObj.answer) {
+                    correctCount++;
+                    feedback.innerText = '✅ 答對了！觀念掌握完美。';
+                    feedback.className = 'mt-2 text-xs font-semibold text-emerald-400';
+                } else {
+                    feedback.innerText = `❌ 答錯了。正確答案是：${qObj.options[qObj.answer]}`;
+                    feedback.className = 'mt-2 text-xs font-semibold text-rose-400';
+                }
+            });
+
+            totalCorrect += correctCount;
+            document.getElementById('totalCorrect').innerText = totalCorrect;
+        }
+
+        function resetDashboard() {
+            currentActiveIsland = null;
+            const dashboard = document.getElementById('studyDashboard');
+            dashboard.className = "bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 shadow-xl min-h-[350px] flex flex-col justify-center items-center text-center";
+            dashboard.innerHTML = `
+                <div class="text-5xl mb-4">🧭</div>
+                <h3 class="text-xl font-bold text-slate-200 mb-2">準備好展開 DSE 冒險了嗎？</h3>
+                <p class="text-slate-400 text-sm max-w-md mb-6">請點選上方任一個已解鎖的科目島嶼，即可開始進行「考點精華溫習」以及「DSE 實戰選擇題挑戰」！</p>
+            `;
+        }
+
+        // 聊天室功能
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const chatMessages = document.getElementById('chatMessages');
+            const now = new Date();
+            const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            // 用戶訊息
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'bg-blue-900/40 p-2.5 rounded-xl border border-blue-800/60 ml-4';
+            userMsgDiv.innerHTML = `
+                <div class="flex justify-between text-slate-400 mb-1">
+                    <span class="font-semibold text-blue-300">我 (S.3 考生)</span>
+                    <span>${timeStr}</span>
+                </div>
+                <p class="text-slate-200">${escapeHtml(text)}</p>
+            `;
+            chatMessages.appendChild(userMsgDiv);
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // 模擬同儕自動回覆
+            setTimeout(() => {
+                const replies = [
+                    "加油呀！呢個課題真係幾考心思。",
+                    "我都啱啱做完呢個島嘅題目，幾好玩！",
+                    "有冇人一齊溫下物理光學？",
+                    "一齊衝高個溫習時間，解鎖下一個島！"
+                ];
+                const randomReply = replies[Math.floor(Math.random() * replies.length)];
+                const peerNames = ["S.3 Chloe", "Kelvin (S.3)", "LokHei"];
+                const randomPeer = peerNames[Math.floor(Math.random() * peerNames.length)];
+
+                const peerMsgDiv = document.createElement('div');
+                peerMsgDiv.className = 'bg-slate-700/40 p-2.5 rounded-xl border border-slate-700 mr-4';
+                peerMsgDiv.innerHTML = `
+                    <div class="flex justify-between text-slate-400 mb-1">
+                        <span class="font-semibold text-purple-400">${randomPeer}</span>
+                        <span>${timeStr}</span>
+                    </div>
+                    <p class="text-slate-200">${randomReply}</p>
+                `;
+                chatMessages.appendChild(peerMsgDiv);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 1000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+
+        // 頁面載入初始化
+        renderIslands();
+    </script>
+</body>
+</html>
